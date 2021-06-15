@@ -231,6 +231,8 @@ class WebSocketHandler(tornado.web.RequestHandler):
     async def get(self, *args: Any, **kwargs: Any) -> None:
         self.open_args = args
         self.open_kwargs = kwargs
+        log_msg = f'Starting websocket handling: {self}, {args}, {kwargs}'
+        gen_log.debug(log_msg)
 
         # Upgrade header should be present and should be equal to WebSocket
         if self.request.headers.get("Upgrade", "").lower() != "websocket":
