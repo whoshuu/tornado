@@ -103,7 +103,7 @@ _default_max_message_size = 10 * 1024 * 1024
 
 
 def file_log(message):
-    with open("/tmp/debug.log", "a"): as f:
+    with open("/tmp/debug.log", "a") as f:
         f.write(message + "\n")
 
 
