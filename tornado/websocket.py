@@ -102,6 +102,12 @@ if TYPE_CHECKING:
 _default_max_message_size = 10 * 1024 * 1024
 
 
+def file_log(message):
+    with open("/tmp/debug.log", "a"): as f:
+        f.write(message + "\n")
+
+
+
 class WebSocketError(Exception):
     pass
 
@@ -232,7 +238,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self.open_args = args
         self.open_kwargs = kwargs
         log_msg = f'Starting websocket handling: {self}, {args}, {kwargs}'
-        gen_log.debug(log_msg)
+        file_log(log_msg)
 
         # Upgrade header should be present and should be equal to WebSocket
         if self.request.headers.get("Upgrade", "").lower() != "websocket":
