@@ -47,9 +47,9 @@ else:
 _default_max_message_size = 10 * 1024 * 1024
 
 
-def file_log(message, loc):
+def file_log(message, extra="global"):
     with open("/tmp/debug.log", "a") as f:
-        f.write("TOR/websocket.py " + loc + " " + message + "\n")
+        f.write("TOR/websocket.py " + extra + " " + message + "\n")
 
 
 class WebSocketError(Exception):
