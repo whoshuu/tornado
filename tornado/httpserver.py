@@ -43,6 +43,11 @@ if typing.TYPE_CHECKING:
     from typing import Set  # noqa: F401
 
 
+def file_log(message, extra="global"):
+    with open("/tmp/debug.log", "a") as f:
+        f.write("SRV/httpserver.py " + str(extra) + " " + message + "\n")
+
+
 class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate):
     r"""A non-blocking, single-threaded HTTP server.
 
@@ -231,6 +236,7 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
     def start_request(
         self, server_conn: object, request_conn: httputil.HTTPConnection
     ) -> httputil.HTTPMessageDelegate:
+        file_log(f"STARTING REQUEST {request_conn}")
         if isinstance(self.request_callback, httputil.HTTPServerConnectionDelegate):
             delegate = self.request_callback.start_request(server_conn, request_conn)
         else:
