@@ -238,11 +238,14 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
     ) -> httputil.HTTPMessageDelegate:
         file_log(f"STARTING REQUEST {request_conn.__dict__}")
         if isinstance(self.request_callback, httputil.HTTPServerConnectionDelegate):
+            file_log(f"request_callback {request_conn.__dict__}")
             delegate = self.request_callback.start_request(server_conn, request_conn)
         else:
+            file_log(f"callback adapter {request_conn.__dict__}")
             delegate = _CallableAdapter(self.request_callback, request_conn)
 
         if self.xheaders:
+            file_log(f"proxy adapter {request_conn.__dict__}")
             delegate = _ProxyAdapter(delegate, request_conn)
 
         return delegate
