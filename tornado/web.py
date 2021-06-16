@@ -2678,7 +2678,7 @@ class StaticFileHandler(RequestHandler):
 
     @classmethod
     def reset(cls) -> None:
-        file_log("reset", self.__class__.__name__)
+        file_log("reset", cls.__name__)
         with cls._lock:
             cls._static_hashes = {}
 
@@ -2837,7 +2837,7 @@ class StaticFileHandler(RequestHandler):
 
     @classmethod
     def get_absolute_path(cls, root: str, path: str) -> str:
-        file_log("get_absolute_path", self.__class__.__name__)
+        file_log("get_absolute_path", cls.__name__)
         """Returns the absolute location of ``path`` relative to ``root``.
 
         ``root`` is the path configured for this `StaticFileHandler`
