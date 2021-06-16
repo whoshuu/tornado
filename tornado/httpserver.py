@@ -236,7 +236,7 @@ class HTTPServer(TCPServer, Configurable, httputil.HTTPServerConnectionDelegate)
     def start_request(
         self, server_conn: object, request_conn: httputil.HTTPConnection
     ) -> httputil.HTTPMessageDelegate:
-        file_log(f"STARTING REQUEST {request_conn}")
+        file_log(f"STARTING REQUEST {request_conn.__dict__}")
         if isinstance(self.request_callback, httputil.HTTPServerConnectionDelegate):
             delegate = self.request_callback.start_request(server_conn, request_conn)
         else:
