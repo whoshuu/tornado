@@ -227,7 +227,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         request: httputil.HTTPServerRequest,
         **kwargs: Any
     ) -> None:
-        file_log("__init__", self.__class__.__name__)
+        file_log(f"__init__ {request.data}", self.__class__.__name__)
         super().__init__(application, request, **kwargs)
         self.ws_connection = None  # type: Optional[WebSocketProtocol]
         self.close_code = None  # type: Optional[int]
@@ -236,7 +236,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self._on_close_called = False
 
     async def get(self, *args: Any, **kwargs: Any) -> None:
-        file_log("get", self.__class__.__name__)
+        file_log(f"get {self.request.data}", self.__class__.__name__)
         self.open_args = args
         self.open_kwargs = kwargs
         log_msg = f'Starting websocket handling: {self}, {args}, {kwargs}'
@@ -292,7 +292,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
     @property
     def ping_interval(self) -> Optional[float]:
-        file_log("ping_interval", self.__class__.__name__)
+        file_log(f"ping_interval {self.request.data}", self.__class__.__name__)
         """The interval for websocket keep-alive pings.
 
         Set websocket_ping_interval = 0 to disable pings.
@@ -301,7 +301,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
     @property
     def ping_timeout(self) -> Optional[float]:
-        file_log("ping_timeout", self.__class__.__name__)
+        file_log(f"ping_timeout {self.request.data}", self.__class__.__name__)
         """If no ping is received in this many seconds,
         close the websocket connection (VPNs, etc. can fail to cleanly close ws connections).
         Default is max of 3 pings or 30 seconds.
@@ -310,7 +310,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
     @property
     def max_message_size(self) -> int:
-        file_log("max_message_size", self.__class__.__name__)
+        file_log(f"max_message_size {self.request.data}", self.__class__.__name__)
         """Maximum allowed message size.
 
         If the remote peer sends a message larger than this, the connection
@@ -346,7 +346,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
            Consistently raises `WebSocketClosedError`. Previously could
            sometimes raise `.StreamClosedError`.
         """
-        file_log("write_message WebsocketHandler", self.__class__.__name__)
+        file_log(f"write_message {self.request.data} WebsocketHandler", self.__class__.__name__)
         if self.ws_connection is None or self.ws_connection.is_closing():
             raise WebSocketClosedError()
         if isinstance(message, dict):
@@ -376,7 +376,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
            an empty string instead of an empty list if no subprotocols
            were proposed by the client.
         """
-        file_log("select_subprotocol", self.__class__.__name__)
+        file_log(f"select_subprotocol {self.request.data}", self.__class__.__name__)
         return None
 
     @property
@@ -385,12 +385,12 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
         .. versionadded:: 5.1
         """
-        file_log("selected_subprotocol", self.__class__.__name__)
+        file_log(f"selected_subprotocol {self.request.data}", self.__class__.__name__)
         assert self.ws_connection is not None
         return self.ws_connection.selected_subprotocol
 
     def get_compression_options(self) -> Optional[Dict[str, Any]]:
-        file_log("get_compression_options", self.__class__.__name__)
+        file_log(f"get_compression_options {self.request.data}", self.__class__.__name__)
         """Override to return compression options for the connection.
 
         If this method returns None (the default), compression will
@@ -415,7 +415,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         return None
 
     def open(self, *args: str, **kwargs: str) -> Optional[Awaitable[None]]:
-        file_log("open", self.__class__.__name__)
+        file_log(f"open {self.request.data}", self.__class__.__name__)
         """Invoked when a new WebSocket is opened.
 
         The arguments to `open` are extracted from the `tornado.web.URLSpec`
@@ -432,7 +432,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         pass
 
     def on_message(self, message: Union[str, bytes]) -> Optional[Awaitable[None]]:
-        file_log("on_message", self.__class__.__name__)
+        file_log(f"on_message {self.request.data}", self.__class__.__name__)
         """Handle incoming messages on the WebSocket
 
         This method must be overridden.
@@ -444,7 +444,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         raise NotImplementedError
 
     def ping(self, data: Union[str, bytes] = b"") -> None:
-        file_log("ping", self.__class__.__name__)
+        file_log(f"ping {self.request.data}", self.__class__.__name__)
         """Send ping frame to the remote end.
 
         The data argument allows a small amount of data (up to 125
@@ -466,17 +466,17 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self.ws_connection.write_ping(data)
 
     def on_pong(self, data: bytes) -> None:
-        file_log("on_pong", self.__class__.__name__)
+        file_log(f"on_pong {self.request.data}", self.__class__.__name__)
         """Invoked when the response to a ping frame is received."""
         pass
 
     def on_ping(self, data: bytes) -> None:
-        file_log("on_ping", self.__class__.__name__)
+        file_log(f"on_ping {self.request.data}", self.__class__.__name__)
         """Invoked when the a ping frame is received."""
         pass
 
     def on_close(self) -> None:
-        file_log("on_close", self.__class__.__name__)
+        file_log(f"on_close {self.request.data}", self.__class__.__name__)
         """Invoked when the WebSocket is closed.
 
         If the connection was closed cleanly and a status code or reason
@@ -490,7 +490,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         pass
 
     def close(self, code: Optional[int] = None, reason: Optional[str] = None) -> None:
-        file_log("close", self.__class__.__name__)
+        file_log(f"close {self.request.data}", self.__class__.__name__)
         """Closes this Web Socket.
 
         Once the close handshake is successful the socket will be closed.
@@ -511,7 +511,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
             self.ws_connection = None
 
     def check_origin(self, origin: str) -> bool:
-        file_log("check_origin", self.__class__.__name__)
+        file_log(f"check_origin {self.request.data}", self.__class__.__name__)
         """Override to enable support for allowing alternate origins.
 
         The ``origin`` argument is the value of the ``Origin`` HTTP
@@ -568,7 +568,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         return origin == host
 
     def set_nodelay(self, value: bool) -> None:
-        file_log("set_nodelay", self.__class__.__name__)
+        file_log(f"set_nodelay {self.request.data}", self.__class__.__name__)
         """Set the no-delay flag for this stream.
 
         By default, small messages may be delayed and/or combined to minimize
@@ -586,7 +586,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self.ws_connection.set_nodelay(value)
 
     def on_connection_close(self) -> None:
-        file_log("on_connection_close", self.__class__.__name__)
+        file_log(f"on_connection_close {self.request.data}", self.__class__.__name__)
         if self.ws_connection:
             self.ws_connection.on_connection_close()
             self.ws_connection = None
@@ -598,13 +598,13 @@ class WebSocketHandler(tornado.web.RequestHandler):
     def on_ws_connection_close(
         self, close_code: Optional[int] = None, close_reason: Optional[str] = None
     ) -> None:
-        file_log("on_ws_connection_close", self.__class__.__name__)
+        file_log(f"on_ws_connection_close {self.request.data}", self.__class__.__name__)
         self.close_code = close_code
         self.close_reason = close_reason
         self.on_connection_close()
 
     def _break_cycles(self) -> None:
-        file_log("_break_cycles", self.__class__.__name__)
+        file_log(f"_break_cycles {self.request.data}", self.__class__.__name__)
         # WebSocketHandlers call finish() early, but we don't want to
         # break up reference cycles (which makes it impossible to call
         # self.render_string) until after we've really closed the
@@ -614,7 +614,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
             super()._break_cycles()
 
     def send_error(self, *args: Any, **kwargs: Any) -> None:
-        file_log("send_error", self.__class__.__name__)
+        file_log(f"send_error {self.request.data}", self.__class__.__name__)
         if self.stream is None:
             super().send_error(*args, **kwargs)
         else:
@@ -625,7 +625,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
             self.stream.close()
 
     def get_websocket_protocol(self) -> Optional["WebSocketProtocol"]:
-        file_log("get_websocket_protocol", self.__class__.__name__)
+        file_log(f"get_websocket_protocol {self.request.data}", self.__class__.__name__)
         websocket_version = self.request.headers.get("Sec-WebSocket-Version")
         if websocket_version in ("7", "8", "13"):
             params = _WebSocketParams(
@@ -638,7 +638,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         return None
 
     def _detach_stream(self) -> IOStream:
-        file_log("_detach_stream", self.__class__.__name__)
+        file_log(f"_detach_stream {self.request.data}", self.__class__.__name__)
         # disable non-WS methods
         for method in [
             "write",
@@ -662,7 +662,7 @@ class WebSocketProtocol(abc.ABC):
     """
 
     def __init__(self, handler: "_WebSocketDelegate") -> None:
-        file_log("__init__", self.__class__.__name__)
+        file_log(f"__init__ {handler.request.path}", self.__class__.__name__)
         self.handler = handler
         self.stream = None  # type: Optional[IOStream]
         self.client_terminated = False
@@ -671,7 +671,7 @@ class WebSocketProtocol(abc.ABC):
     def _run_callback(
         self, callback: Callable, *args: Any, **kwargs: Any
     ) -> "Optional[Future[Any]]":
-        file_log("_run_callback", self.__class__.__name__)
+        file_log(f"_run_callback {self.handler.request.data}", self.__class__.__name__)
         """Runs the given callback with exception handling.
 
         If the callback is a coroutine, returns its Future. On error, aborts the
@@ -691,11 +691,11 @@ class WebSocketProtocol(abc.ABC):
             return result
 
     def on_connection_close(self) -> None:
-        file_log("on_connection_close", self.__class__.__name__)
+        file_log(f"on_connection_close {self.handler.request.data}", self.__class__.__name__)
         self._abort()
 
     def _abort(self) -> None:
-        file_log("_abort", self.__class__.__name__)
+        file_log(f"_abort {self.handler.request.data}", self.__class__.__name__)
         """Instantly aborts the WebSocket connection by closing the socket"""
         self.client_terminated = True
         self.server_terminated = True
@@ -705,35 +705,35 @@ class WebSocketProtocol(abc.ABC):
 
     @abc.abstractmethod
     def close(self, code: Optional[int] = None, reason: Optional[str] = None) -> None:
-        file_log("close", self.__class__.__name__)
+        file_log(f"close {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     def is_closing(self) -> bool:
-        file_log("is_closing", self.__class__.__name__)
+        file_log(f"is_closing {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     async def accept_connection(self, handler: WebSocketHandler) -> None:
-        file_log("accept_connection", self.__class__.__name__)
+        file_log(f"accept_connection {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     def write_message(
         self, message: Union[str, bytes], binary: bool = False
     ) -> "Future[None]":
-        file_log("write_message", self.__class__.__name__)
+        file_log(f"write_message {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
     def selected_subprotocol(self) -> Optional[str]:
-        file_log("selected_subprotocol", self.__class__.__name__)
+        file_log(f"selected_subprotocol {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     def write_ping(self, data: bytes) -> None:
-        file_log("write_ping", self.__class__.__name__)
+        file_log(f"write_ping {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     # The entry points below are used by WebSocketClientConnection,
@@ -744,22 +744,22 @@ class WebSocketProtocol(abc.ABC):
     def _process_server_headers(
         self, key: Union[str, bytes], headers: httputil.HTTPHeaders
     ) -> None:
-        file_log("_process_server_headers", self.__class__.__name__)
+        file_log(f"_process_server_headers {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     def start_pinging(self) -> None:
-        file_log("start_pinging", self.__class__.__name__)
+        file_log(f"start_pinging {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     async def _receive_frame_loop(self) -> None:
-        file_log("_receive_frame_loop", self.__class__.__name__)
+        file_log(f"_receive_frame_loop {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
     @abc.abstractmethod
     def set_nodelay(self, x: bool) -> None:
-        file_log("set_nodelay", self.__class__.__name__)
+        file_log(f"set_nodelay {self.handler.request.data}", self.__class__.__name__)
         raise NotImplementedError()
 
 
@@ -878,7 +878,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         mask_outgoing: bool,
         params: _WebSocketParams,
     ) -> None:
-        file_log("__init__", self.__class__.__name__)
+        file_log(f"__init__ {handler.request.path}", self.__class__.__name__)
         WebSocketProtocol.__init__(self, handler)
         self.mask_outgoing = mask_outgoing
         self.params = params
@@ -912,16 +912,16 @@ class WebSocketProtocol13(WebSocketProtocol):
     # Use a property for this to satisfy the abc.
     @property
     def selected_subprotocol(self) -> Optional[str]:
-        file_log("selected_subprotocol", self.__class__.__name__)
+        file_log(f"selected_subprotocol {self.handler.request.path}", self.__class__.__name__)
         return self._selected_subprotocol
 
     @selected_subprotocol.setter
     def selected_subprotocol(self, value: Optional[str]) -> None:
-        file_log("selected_subprotocol", self.__class__.__name__)
+        file_log(f"selected_subprotocol {self.handler.request.path}", self.__class__.__name__)
         self._selected_subprotocol = value
 
     async def accept_connection(self, handler: WebSocketHandler) -> None:
-        file_log("accept_connection", self.__class__.__name__)
+        file_log(f"accept_connection {self.handler.request.path}", self.__class__.__name__)
         try:
             self._handle_websocket_headers(handler)
         except ValueError:
@@ -942,7 +942,7 @@ class WebSocketProtocol13(WebSocketProtocol):
             return
 
     def _handle_websocket_headers(self, handler: WebSocketHandler) -> None:
-        file_log("_handle_websocket_headers", self.__class__.__name__)
+        file_log(f"_handle_websocket_headers {self.handler.request.path}", self.__class__.__name__)
         """Verifies all invariant- and required headers
 
         If a header is missing or have an incorrect value ValueError will be
@@ -954,7 +954,7 @@ class WebSocketProtocol13(WebSocketProtocol):
 
     @staticmethod
     def compute_accept_value(key: Union[str, bytes]) -> str:
-        file_log("compute_accept_value")
+        file_log(f"compute_accept_value {self.handler.request.path}")
         """Computes the value for the Sec-WebSocket-Accept header,
         given the value for Sec-WebSocket-Key.
         """
@@ -964,13 +964,13 @@ class WebSocketProtocol13(WebSocketProtocol):
         return native_str(base64.b64encode(sha1.digest()))
 
     def _challenge_response(self, handler: WebSocketHandler) -> str:
-        file_log("_challenge_response", self.__class__.__name__)
+        file_log(f"_challenge_response {self.handler.request.path}", self.__class__.__name__)
         return WebSocketProtocol13.compute_accept_value(
             cast(str, handler.request.headers.get("Sec-Websocket-Key"))
         )
 
     async def _accept_connection(self, handler: WebSocketHandler) -> None:
-        file_log("_accept_connection", self.__class__.__name__)
+        file_log(f"_accept_connection {self.handler.request.path}", self.__class__.__name__)
         subprotocol_header = handler.request.headers.get("Sec-WebSocket-Protocol")
         if subprotocol_header:
             subprotocols = [s.strip() for s in subprotocol_header.split(",")]
@@ -1024,7 +1024,7 @@ class WebSocketProtocol13(WebSocketProtocol):
     def _parse_extensions_header(
         self, headers: httputil.HTTPHeaders
     ) -> List[Tuple[str, Dict[str, str]]]:
-        file_log("_parse_extensions_header", self.__class__.__name__)
+        file_log(f"_parse_extensions_header {self.handler.request.path}", self.__class__.__name__)
         extensions = headers.get("Sec-WebSocket-Extensions", "")
         if extensions:
             return [httputil._parse_header(e.strip()) for e in extensions.split(",")]
@@ -1033,7 +1033,7 @@ class WebSocketProtocol13(WebSocketProtocol):
     def _process_server_headers(
         self, key: Union[str, bytes], headers: httputil.HTTPHeaders
     ) -> None:
-        file_log("_process_server_headers", self.__class__.__name__)
+        file_log(f"_process_server_headers {self.handler.request.path}", self.__class__.__name__)
         """Process the headers sent by the server to this client connection.
 
         'key' is the websocket handshake challenge/response key.
@@ -1058,7 +1058,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         agreed_parameters: Dict[str, Any],
         compression_options: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        file_log("_get_compressor_options", self.__class__.__name__)
+        file_log(f"_get_compressor_options {self.handler.request.path}", self.__class__.__name__)
         """Converts a websocket agreed_parameters set to keyword arguments
         for our compressor objects.
         """
@@ -1079,7 +1079,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         agreed_parameters: Dict[str, Any],
         compression_options: Optional[Dict[str, Any]] = None,
     ) -> None:
-        file_log("_create_compressors", self.__class__.__name__)
+        file_log(f"_create_compressors {self.handler.request.path}", self.__class__.__name__)
         # TODO: handle invalid parameters gracefully
         allowed_keys = set(
             [
@@ -1106,7 +1106,7 @@ class WebSocketProtocol13(WebSocketProtocol):
     def _write_frame(
         self, fin: bool, opcode: int, data: bytes, flags: int = 0
     ) -> "Future[None]":
-        file_log("_write_frame", self.__class__.__name__)
+        file_log(f"_write_frame {self.handler.request.path}", self.__class__.__name__)
         data_len = len(data)
         if opcode & 0x8:
             # All control frames MUST have a payload length of 125
@@ -1140,7 +1140,7 @@ class WebSocketProtocol13(WebSocketProtocol):
     def write_message(
         self, message: Union[str, bytes], binary: bool = False
     ) -> "Future[None]":
-        file_log("write_message WebsocketProtocol13", self.__class__.__name__)
+        file_log(f"write_message  {self.handler.request.path}WebsocketProtocol13", self.__class__.__name__)
         """Sends the given message to the client of this Web Socket."""
         if binary:
             opcode = 0x2
@@ -1172,13 +1172,13 @@ class WebSocketProtocol13(WebSocketProtocol):
         return asyncio.ensure_future(wrapper())
 
     def write_ping(self, data: bytes) -> None:
-        file_log("write_ping", self.__class__.__name__)
+        file_log(f"write_ping {self.handler.request.path}", self.__class__.__name__)
         """Send ping frame."""
         assert isinstance(data, bytes)
         self._write_frame(True, 0x9, data)
 
     async def _receive_frame_loop(self) -> None:
-        file_log("_receive_frame_loop", self.__class__.__name__)
+        file_log(f"_receive_frame_loop {self.handler.request.path}", self.__class__.__name__)
         try:
             while not self.client_terminated:
                 await self._receive_frame()
@@ -1187,13 +1187,13 @@ class WebSocketProtocol13(WebSocketProtocol):
         self.handler.on_ws_connection_close(self.close_code, self.close_reason)
 
     async def _read_bytes(self, n: int) -> bytes:
-        file_log("_read_bytes", self.__class__.__name__)
+        file_log(f"_read_bytes {self.handler.request.path}", self.__class__.__name__)
         data = await self.stream.read_bytes(n)
         self._wire_bytes_in += n
         return data
 
     async def _receive_frame(self) -> None:
-        file_log("_receive_frame", self.__class__.__name__)
+        file_log(f"_receive_frame {self.handler.request.path}", self.__class__.__name__)
         # Read the frame header.
         data = await self._read_bytes(2)
         header, mask_payloadlen = struct.unpack("BB", data)
@@ -1277,7 +1277,7 @@ class WebSocketProtocol13(WebSocketProtocol):
                 await handled_future
 
     def _handle_message(self, opcode: int, data: bytes) -> "Optional[Future[None]]":
-        file_log("_handle_message", self.__class__.__name__)
+        file_log(f"_handle_message {self.handler.request.path}", self.__class__.__name__)
         """Execute on_message, returning its Future if it is a coroutine."""
         if self.client_terminated:
             return None
@@ -1329,7 +1329,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         return None
 
     def close(self, code: Optional[int] = None, reason: Optional[str] = None) -> None:
-        file_log("close", self.__class__.__name__)
+        file_log(f"close {self.handler.request.path}", self.__class__.__name__)
         """Closes the WebSocket connection."""
         if not self.server_terminated:
             if not self.stream.closed():
@@ -1362,7 +1362,7 @@ class WebSocketProtocol13(WebSocketProtocol):
             self.ping_callback = None
 
     def is_closing(self) -> bool:
-        file_log("is_closing", self.__class__.__name__)
+        file_log(f"is_closing {self.handler.request.path}", self.__class__.__name__)
         """Return ``True`` if this connection is closing.
 
         The connection is considered closing if either side has
@@ -1373,7 +1373,7 @@ class WebSocketProtocol13(WebSocketProtocol):
 
     @property
     def ping_interval(self) -> Optional[float]:
-        file_log("ping_interval", self.__class__.__name__)
+        file_log(f"ping_interval {self.handler.request.path}", self.__class__.__name__)
         interval = self.params.ping_interval
         if interval is not None:
             return interval
@@ -1381,7 +1381,7 @@ class WebSocketProtocol13(WebSocketProtocol):
 
     @property
     def ping_timeout(self) -> Optional[float]:
-        file_log("ping_timeout", self.__class__.__name__)
+        file_log(f"ping_timeout {self.handler.request.path}", self.__class__.__name__)
         timeout = self.params.ping_timeout
         if timeout is not None:
             return timeout
@@ -1389,7 +1389,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         return max(3 * self.ping_interval, 30)
 
     def start_pinging(self) -> None:
-        file_log("start_pinging", self.__class__.__name__)
+        file_log(f"start_pinging {self.handler.request.path}", self.__class__.__name__)
         """Start sending periodic pings to keep the connection alive"""
         assert self.ping_interval is not None
         if self.ping_interval > 0:
@@ -1400,7 +1400,7 @@ class WebSocketProtocol13(WebSocketProtocol):
             self.ping_callback.start()
 
     def periodic_ping(self) -> None:
-        file_log("periodic_ping", self.__class__.__name__)
+        file_log(f"periodic_ping {self.handler.request.path}", self.__class__.__name__)
         """Send a ping to keep the websocket alive
 
         Called periodically if the websocket_ping_interval is set and non-zero.
@@ -1428,7 +1428,7 @@ class WebSocketProtocol13(WebSocketProtocol):
         self.last_ping = now
 
     def set_nodelay(self, x: bool) -> None:
-        file_log("set_nodelay", self.__class__.__name__)
+        file_log(f"set_nodelay {self.handler.request.path}", self.__class__.__name__)
         self.stream.set_nodelay(x)
 
 
@@ -1451,7 +1451,8 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         max_message_size: int = _default_max_message_size,
         subprotocols: Optional[List[str]] = [],
     ) -> None:
-        file_log("__init__", self.__class__.__name__)
+        self.path = request.path
+        file_log(f"__init__ {request.path}", self.__class__.__name__)
         self.connect_future = Future()  # type: Future[WebSocketClientConnection]
         self.read_queue = Queue(1)  # type: Queue[Union[None, str, bytes]]
         self.key = base64.b64encode(os.urandom(16))
@@ -1504,7 +1505,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         )
 
     def close(self, code: Optional[int] = None, reason: Optional[str] = None) -> None:
-        file_log("close", self.__class__.__name__)
+        file_log(f"close {self.path}", self.__class__.__name__)
         """Closes the websocket connection.
 
         ``code`` and ``reason`` are documented under
@@ -1521,7 +1522,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
             self.protocol = None  # type: ignore
 
     def on_connection_close(self) -> None:
-        file_log("on_connection_close", self.__class__.__name__)
+        file_log(f"on_connection_close {self.path}", self.__class__.__name__)
         if not self.connect_future.done():
             self.connect_future.set_exception(StreamClosedError())
         self._on_message(None)
@@ -1531,13 +1532,13 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
     def on_ws_connection_close(
         self, close_code: Optional[int] = None, close_reason: Optional[str] = None
     ) -> None:
-        file_log("on_ws_connection_close", self.__class__.__name__)
+        file_log(f"on_ws_connection_close {self.path}", self.__class__.__name__)
         self.close_code = close_code
         self.close_reason = close_reason
         self.on_connection_close()
 
     def _on_http_response(self, response: httpclient.HTTPResponse) -> None:
-        file_log("_on_http_response", self.__class__.__name__)
+        file_log(f"_on_http_response {self.path}", self.__class__.__name__)
         if not self.connect_future.done():
             if response.error:
                 self.connect_future.set_exception(response.error)
@@ -1551,7 +1552,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         start_line: Union[httputil.RequestStartLine, httputil.ResponseStartLine],
         headers: httputil.HTTPHeaders,
     ) -> None:
-        file_log("headers_received", self.__class__.__name__)
+        file_log(f"headers_received {self.path}", self.__class__.__name__)
         assert isinstance(start_line, httputil.ResponseStartLine)
         if start_line.code != 101:
             await super().headers_received(start_line, headers)
@@ -1580,7 +1581,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
     def write_message(
         self, message: Union[str, bytes], binary: bool = False
     ) -> "Future[None]":
-        file_log("write_message", self.__class__.__name__)
+        file_log(f"write_message {self.path}", self.__class__.__name__)
         """Sends a message to the WebSocket server.
 
         If the stream is closed, raises `WebSocketClosedError`.
@@ -1596,7 +1597,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         self,
         callback: Optional[Callable[["Future[Union[None, str, bytes]]"], None]] = None,
     ) -> Awaitable[Union[None, str, bytes]]:
-        file_log("read_message", self.__class__.__name__)
+        file_log(f"read_message {self.path}", self.__class__.__name__)
         """Reads a message from the WebSocket server.
 
         If on_message_callback was specified at WebSocket
@@ -1614,13 +1615,13 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         return awaitable
 
     def on_message(self, message: Union[str, bytes]) -> Optional[Awaitable[None]]:
-        file_log("on_message", self.__class__.__name__)
+        file_log(f"on_message {self.path}", self.__class__.__name__)
         return self._on_message(message)
 
     def _on_message(
         self, message: Union[None, str, bytes]
     ) -> Optional[Awaitable[None]]:
-        file_log("_on_message", self.__class__.__name__)
+        file_log(f"_on_message {self.path}", self.__class__.__name__)
         if self._on_message_callback:
             self._on_message_callback(message)
             return None
@@ -1628,7 +1629,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
             return self.read_queue.put(message)
 
     def ping(self, data: bytes = b"") -> None:
-        file_log("ping", self.__class__.__name__)
+        file_log(f"ping {self.path}", self.__class__.__name__)
         """Send ping frame to the remote end.
 
         The data argument allows a small amount of data (up to 125
@@ -1648,20 +1649,20 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         self.protocol.write_ping(data)
 
     def on_pong(self, data: bytes) -> None:
-        file_log("on_pong", self.__class__.__name__)
+        file_log(f"on_pong {self.path}", self.__class__.__name__)
         pass
 
     def on_ping(self, data: bytes) -> None:
-        file_log("on_ping", self.__class__.__name__)
+        file_log(f"on_ping {self.path}", self.__class__.__name__)
         pass
 
     def get_websocket_protocol(self) -> WebSocketProtocol:
-        file_log("get_websocket_protocol", self.__class__.__name__)
+        file_log(f"get_websocket_protocol {self.path}", self.__class__.__name__)
         return WebSocketProtocol13(self, mask_outgoing=True, params=self.params)
 
     @property
     def selected_subprotocol(self) -> Optional[str]:
-        file_log("selected_subprotocol", self.__class__.__name__)
+        file_log(f"selected_subprotocol {self.path}", self.__class__.__name__)
         """The subprotocol selected by the server.
 
         .. versionadded:: 5.1
@@ -1674,7 +1675,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         value: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:
-        file_log("log_exception", self.__class__.__name__)
+        file_log(f"log_exception {self.path}", self.__class__.__name__)
         assert typ is not None
         assert value is not None
         app_log.error("Uncaught exception %s", value, exc_info=(typ, value, tb))
