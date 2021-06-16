@@ -954,7 +954,7 @@ class WebSocketProtocol13(WebSocketProtocol):
 
     @staticmethod
     def compute_accept_value(key: Union[str, bytes]) -> str:
-        file_log(f"compute_accept_value {self.handler.request.path}")
+        file_log(f"compute_accept_value")
         """Computes the value for the Sec-WebSocket-Accept header,
         given the value for Sec-WebSocket-Key.
         """
