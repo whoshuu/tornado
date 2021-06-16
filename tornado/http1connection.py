@@ -18,6 +18,7 @@
 .. versionadded:: 4.0
 """
 
+import uuid
 import asyncio
 import logging
 import re
@@ -37,6 +38,11 @@ from tornado.util import GzipDecompressor
 
 
 from typing import cast, Optional, Type, Awaitable, Callable, Union, Tuple
+
+
+def file_log(message, extra="global"):
+    with open("/tmp/debug.log", "a") as f:
+        f.write("TOR/http1connection.py " + str(extra) + " " + message + "\n")
 
 
 class _QuietException(Exception):
@@ -123,6 +129,7 @@ class HTTP1Connection(httputil.HTTPConnection):
         :arg context: an opaque application-defined object that can be accessed
             as ``connection.context``.
         """
+        self.uuid = str(uuid.uuid4())
         self.is_client = is_client
         self.stream = stream
         if params is None:
@@ -161,6 +168,7 @@ class HTTP1Connection(httputil.HTTPConnection):
         self._expected_content_remaining = None  # type: Optional[int]
         # A Future for our outgoing writes, returned by IOStream.write.
         self._pending_write = None  # type: Optional[Future[None]]
+        file_log(f"__init__ {self.uuid}", self.__class__.__name__)
 
     def read_response(self, delegate: httputil.HTTPMessageDelegate) -> Awaitable[bool]:
         """Read a single HTTP response.
@@ -173,18 +181,21 @@ class HTTP1Connection(httputil.HTTPConnection):
         Returns a `.Future` that resolves to a bool after the full response has
         been read. The result is true if the stream is still open.
         """
+        file_log(f"read_response {self.uuid}", self.__class__.__name__)
         if self.params.decompress:
             delegate = _GzipMessageDelegate(delegate, self.params.chunk_size)
         return self._read_message(delegate)
 
     async def _read_message(self, delegate: httputil.HTTPMessageDelegate) -> bool:
         need_delegate_close = False
+        file_log(f"_read_message {self.uuid}", self.__class__.__name__)
         try:
             header_future = self.stream.read_until_regex(
                 b"\r?\n\r?\n", max_bytes=self.params.max_header_size
             )
             if self.params.header_timeout is None:
                 header_data = await header_future
+                file_log(f"_read_message header_data {self.uuid} {header_data}", self.__class__.__name__)
             else:
                 try:
                     header_data = await gen.with_timeout(
@@ -192,12 +203,14 @@ class HTTP1Connection(httputil.HTTPConnection):
                         header_future,
                         quiet_exceptions=iostream.StreamClosedError,
                     )
+                    file_log(f"_read_message header_data2 {self.uuid} {header_data}", self.__class__.__name__)
                 except gen.TimeoutError:
                     self.close()
                     return False
             start_line_str, headers = self._parse_headers(header_data)
             if self.is_client:
                 resp_start_line = httputil.parse_response_start_line(start_line_str)
+                file_log(f"_read_message resp_start_line {self.uuid} {resp_start_line}", self.__class__.__name__)
                 self._response_start_line = resp_start_line
                 start_line = (
                     resp_start_line
@@ -206,6 +219,7 @@ class HTTP1Connection(httputil.HTTPConnection):
                 self._disconnect_on_finish = False
             else:
                 req_start_line = httputil.parse_request_start_line(start_line_str)
+                file_log(f"_read_message req_start_line {self.uuid} {req_start_line}", self.__class__.__name__)
                 self._request_start_line = req_start_line
                 self._request_headers = headers
                 start_line = req_start_line
@@ -228,12 +242,15 @@ class HTTP1Connection(httputil.HTTPConnection):
                     self._request_start_line is not None
                     and self._request_start_line.method == "HEAD"
                 ):
+                    file_log(f"_read_message HEAD {self.uuid}", self.__class__.__name__)
                     skip_body = True
                 code = start_line.code
+                file_log(f"_read_message 1 {self.uuid}", self.__class__.__name__)
                 if code == 304:
                     # 304 responses may include the content-length header
                     # but do not actually have a body.
                     # http://tools.ietf.org/html/rfc7230#section-3.3
+                    file_log(f"_read_message 2 {self.uuid}", self.__class__.__name__)
                     skip_body = True
                 if 100 <= code < 200:
                     # 1xx responses should never indicate the presence of
@@ -244,28 +261,36 @@ class HTTP1Connection(httputil.HTTPConnection):
                         )
                     # TODO: client delegates will get headers_received twice
                     # in the case of a 100-continue.  Document or change?
+                    file_log(f"_read_message 3 {self.uuid}", self.__class__.__name__)
                     await self._read_message(delegate)
             else:
                 if headers.get("Expect") == "100-continue" and not self._write_finished:
+                    file_log(f"_read_message 4 {self.uuid}", self.__class__.__name__)
                     self.stream.write(b"HTTP/1.1 100 (Continue)\r\n\r\n")
+            file_log(f"_read_message 5 {self.uuid}", self.__class__.__name__)
             if not skip_body:
                 body_future = self._read_body(
                     resp_start_line.code if self.is_client else 0, headers, delegate
                 )
+                file_log(f"_read_message 6 {self.uuid}", self.__class__.__name__)
                 if body_future is not None:
                     if self._body_timeout is None:
+                        file_log(f"_read_message 7 {self.uuid}", self.__class__.__name__)
                         await body_future
                     else:
                         try:
+                            file_log(f"_read_message 8 {self.uuid}", self.__class__.__name__)
                             await gen.with_timeout(
                                 self.stream.io_loop.time() + self._body_timeout,
                                 body_future,
                                 quiet_exceptions=iostream.StreamClosedError,
                             )
                         except gen.TimeoutError:
+                            file_log(f"_read_message 9 {self.uuid}", self.__class__.__name__)
                             gen_log.info("Timeout reading body from %s", self.context)
                             self.stream.close()
                             return False
+            file_log(f"_read_message 10 {self.uuid}", self.__class__.__name__)
             self._read_finished = True
             if not self._write_finished or self.is_client:
                 need_delegate_close = False
@@ -279,24 +304,31 @@ class HTTP1Connection(httputil.HTTPConnection):
                 and self.stream is not None
                 and not self.stream.closed()
             ):
+                file_log(f"_read_message 11 {self.uuid}", self.__class__.__name__)
                 self.stream.set_close_callback(self._on_connection_close)
                 await self._finish_future
             if self.is_client and self._disconnect_on_finish:
+                file_log(f"_read_message 12 {self.uuid}", self.__class__.__name__)
                 self.close()
             if self.stream is None:
                 return False
         except httputil.HTTPInputError as e:
+            file_log(f"_read_message 13 {self.uuid}", self.__class__.__name__)
             gen_log.info("Malformed HTTP message from %s: %s", self.context, e)
             if not self.is_client:
+                file_log(f"_read_message 14 {self.uuid}", self.__class__.__name__)
                 await self.stream.write(b"HTTP/1.1 400 Bad Request\r\n\r\n")
+            file_log(f"_read_message 15 {self.uuid}", self.__class__.__name__)
             self.close()
             return False
         finally:
             if need_delegate_close:
                 with _ExceptionLoggingContext(app_log):
                     delegate.on_connection_close()
+            file_log(f"_read_message 16 {self.uuid}", self.__class__.__name__)
             header_future = None  # type: ignore
             self._clear_callbacks()
+            file_log(f"_read_message 17 {self.uuid}", self.__class__.__name__)
         return True
 
     def _clear_callbacks(self) -> None:
@@ -786,6 +818,7 @@ class HTTP1ServerConnection(object):
         self.params = params
         self.context = context
         self._serving_future = None  # type: Optional[Future[None]]
+
 
     async def close(self) -> None:
         """Closes the connection.
