@@ -346,7 +346,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
            Consistently raises `WebSocketClosedError`. Previously could
            sometimes raise `.StreamClosedError`.
         """
-        file_log("write_message", self.__class__.__name__)
+        file_log("write_message WebsocketHandler", self.__class__.__name__)
         if self.ws_connection is None or self.ws_connection.is_closing():
             raise WebSocketClosedError()
         if isinstance(message, dict):
@@ -1140,7 +1140,7 @@ class WebSocketProtocol13(WebSocketProtocol):
     def write_message(
         self, message: Union[str, bytes], binary: bool = False
     ) -> "Future[None]":
-        file_log("write_message", self.__class__.__name__)
+        file_log("write_message WebsocketProtocol13", self.__class__.__name__)
         """Sends the given message to the client of this Web Socket."""
         if binary:
             opcode = 0x2

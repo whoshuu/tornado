@@ -168,6 +168,11 @@ May be overridden by passing a ``min_version`` keyword argument.
 """
 
 
+def file_log(message, extra="global"):
+    with open("/tmp/debug.log", "a") as f:
+        f.write("TOR/web.py " + extra + " " + message + "\n")
+
+
 class _ArgDefaultMarker:
     pass
 
@@ -1159,6 +1164,7 @@ class RequestHandler(object):
         self._log()
         self._finished = True
         self.on_finish()
+        file_log("calling break cycles inside finish", self.__class__.__name__)
         self._break_cycles()
         return future
 
