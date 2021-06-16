@@ -211,6 +211,7 @@ class RequestHandler(object):
         request: httputil.HTTPServerRequest,
         **kwargs: Any
     ) -> None:
+        file_log("__init__", self.__class__.__name__)
         super().__init__()
 
         self.application = application
@@ -238,6 +239,7 @@ class RequestHandler(object):
         self.initialize(**kwargs)  # type: ignore
 
     def _initialize(self) -> None:
+        file_log("_initialize", self.__class__.__name__)
         pass
 
     initialize = _initialize  # type: Callable[..., None]
@@ -262,10 +264,12 @@ class RequestHandler(object):
 
     @property
     def settings(self) -> Dict[str, Any]:
+        file_log("settings", self.__class__.__name__)
         """An alias for `self.application.settings <Application.settings>`."""
         return self.application.settings
 
     def _unimplemented_method(self, *args: str, **kwargs: str) -> None:
+        file_log("_unimplemented_method", self.__class__.__name__)
         raise HTTPError(405)
 
     head = _unimplemented_method  # type: Callable[..., Optional[Awaitable[None]]]
@@ -277,6 +281,7 @@ class RequestHandler(object):
     options = _unimplemented_method  # type: Callable[..., Optional[Awaitable[None]]]
 
     def prepare(self) -> Optional[Awaitable[None]]:
+        file_log("prepare", self.__class__.__name__)
         """Called at the beginning of a request before  `get`/`post`/etc.
 
         Override this method to perform common initialization regardless
@@ -293,6 +298,7 @@ class RequestHandler(object):
         pass
 
     def on_finish(self) -> None:
+        file_log("on_finish", self.__class__.__name__)
         """Called after the end of a request.
 
         Override this method to perform cleanup, logging, etc.
@@ -303,6 +309,7 @@ class RequestHandler(object):
         pass
 
     def on_connection_close(self) -> None:
+        file_log("on_connection_close", self.__class__.__name__)
         """Called in async handlers if the client closed the connection.
 
         Override this to clean up resources associated with
@@ -322,6 +329,7 @@ class RequestHandler(object):
                 self.request._body_future.exception()
 
     def clear(self) -> None:
+        file_log("clear", self.__class__.__name__)
         """Resets all headers and content for this response."""
         self._headers = httputil.HTTPHeaders(
             {
@@ -336,6 +344,7 @@ class RequestHandler(object):
         self._reason = httputil.responses[200]
 
     def set_default_headers(self) -> None:
+        file_log("set_default_headers", self.__class__.__name__)
         """Override this to set HTTP headers at the beginning of the request.
 
         For example, this is the place to set a custom ``Server`` header.
@@ -346,6 +355,7 @@ class RequestHandler(object):
         pass
 
     def set_status(self, status_code: int, reason: Optional[str] = None) -> None:
+        file_log("set_status", self.__class__.__name__)
         """Sets the status code for our response.
 
         :arg int status_code: Response status code.
@@ -365,10 +375,12 @@ class RequestHandler(object):
             self._reason = httputil.responses.get(status_code, "Unknown")
 
     def get_status(self) -> int:
+        file_log("get_status", self.__class__.__name__)
         """Returns the status code for our response."""
         return self._status_code
 
     def set_header(self, name: str, value: _HeaderTypes) -> None:
+        file_log("set_header", self.__class__.__name__)
         """Sets the given response header name and value.
 
         All header values are converted to strings (`datetime` objects
@@ -379,6 +391,7 @@ class RequestHandler(object):
         self._headers[name] = self._convert_header_value(value)
 
     def add_header(self, name: str, value: _HeaderTypes) -> None:
+        file_log("add_header", self.__class__.__name__)
         """Adds the given response header and value.
 
         Unlike `set_header`, `add_header` may be called multiple times
@@ -387,6 +400,7 @@ class RequestHandler(object):
         self._headers.add(name, self._convert_header_value(value))
 
     def clear_header(self, name: str) -> None:
+        file_log("clear_header", self.__class__.__name__)
         """Clears an outgoing header, undoing a previous `set_header` call.
 
         Note that this method does not apply to multi-valued headers
@@ -398,6 +412,7 @@ class RequestHandler(object):
     _INVALID_HEADER_CHAR_RE = re.compile(r"[\x00-\x1f]")
 
     def _convert_header_value(self, value: _HeaderTypes) -> str:
+        file_log("_convert_header_value", self.__class__.__name__)
         # Convert the input value to a str. This type check is a bit
         # subtle: The bytes case only executes on python 3, and the
         # unicode case only executes on python 2, because the other
@@ -427,18 +442,21 @@ class RequestHandler(object):
 
     @overload
     def get_argument(self, name: str, default: str, strip: bool = True) -> str:
+        file_log("get_argument", self.__class__.__name__)
         pass
 
     @overload
     def get_argument(  # noqa: F811
         self, name: str, default: _ArgDefaultMarker = _ARG_DEFAULT, strip: bool = True
     ) -> str:
+        file_log("get_argument", self.__class__.__name__)
         pass
 
     @overload
     def get_argument(  # noqa: F811
         self, name: str, default: None, strip: bool = True
     ) -> Optional[str]:
+        file_log("get_argument", self.__class__.__name__)
         pass
 
     def get_argument(  # noqa: F811
@@ -447,6 +465,7 @@ class RequestHandler(object):
         default: Union[None, str, _ArgDefaultMarker] = _ARG_DEFAULT,
         strip: bool = True,
     ) -> Optional[str]:
+        file_log("get_argument", self.__class__.__name__)
         """Returns the value of the argument with the given name.
 
         If default is not provided, the argument is considered to be
@@ -460,6 +479,7 @@ class RequestHandler(object):
         return self._get_argument(name, default, self.request.arguments, strip)
 
     def get_arguments(self, name: str, strip: bool = True) -> List[str]:
+        file_log("get_arguments", self.__class__.__name__)
         """Returns a list of the arguments with the given name.
 
         If the argument is not present, returns an empty list.
@@ -480,6 +500,7 @@ class RequestHandler(object):
         default: Union[None, str, _ArgDefaultMarker] = _ARG_DEFAULT,
         strip: bool = True,
     ) -> Optional[str]:
+        file_log("get_body_argument", self.__class__.__name__)
         """Returns the value of the argument with the given name
         from the request body.
 
@@ -494,6 +515,7 @@ class RequestHandler(object):
         return self._get_argument(name, default, self.request.body_arguments, strip)
 
     def get_body_arguments(self, name: str, strip: bool = True) -> List[str]:
+        file_log("get_body_arguments", self.__class__.__name__)
         """Returns a list of the body arguments with the given name.
 
         If the argument is not present, returns an empty list.
@@ -508,6 +530,7 @@ class RequestHandler(object):
         default: Union[None, str, _ArgDefaultMarker] = _ARG_DEFAULT,
         strip: bool = True,
     ) -> Optional[str]:
+        file_log("get_query_argument", self.__class__.__name__)
         """Returns the value of the argument with the given name
         from the request query string.
 
@@ -522,6 +545,7 @@ class RequestHandler(object):
         return self._get_argument(name, default, self.request.query_arguments, strip)
 
     def get_query_arguments(self, name: str, strip: bool = True) -> List[str]:
+        file_log("get_query_arguments", self.__class__.__name__)
         """Returns a list of the query arguments with the given name.
 
         If the argument is not present, returns an empty list.
@@ -537,6 +561,7 @@ class RequestHandler(object):
         source: Dict[str, List[bytes]],
         strip: bool = True,
     ) -> Optional[str]:
+        file_log("_get_argument", self.__class__.__name__)
         args = self._get_arguments(name, source, strip=strip)
         if not args:
             if isinstance(default, _ArgDefaultMarker):
@@ -547,6 +572,7 @@ class RequestHandler(object):
     def _get_arguments(
         self, name: str, source: Dict[str, List[bytes]], strip: bool = True
     ) -> List[str]:
+        file_log("_get_arguments", self.__class__.__name__)
         values = []
         for v in source.get(name, []):
             s = self.decode_argument(v, name=name)
@@ -560,6 +586,7 @@ class RequestHandler(object):
         return values
 
     def decode_argument(self, value: bytes, name: Optional[str] = None) -> str:
+        file_log("decode_argument", self.__class__.__name__)
         """Decodes an argument from the request.
 
         The argument has been percent-decoded and is now a byte string.
@@ -581,11 +608,13 @@ class RequestHandler(object):
 
     @property
     def cookies(self) -> Dict[str, http.cookies.Morsel]:
+        file_log("cookies", self.__class__.__name__)
         """An alias for
         `self.request.cookies <.httputil.HTTPServerRequest.cookies>`."""
         return self.request.cookies
 
     def get_cookie(self, name: str, default: Optional[str] = None) -> Optional[str]:
+        file_log("get_cookie", self.__class__.__name__)
         """Returns the value of the request cookie with the given name.
 
         If the named cookie is not present, returns ``default``.
@@ -608,6 +637,7 @@ class RequestHandler(object):
         expires_days: Optional[float] = None,
         **kwargs: Any
     ) -> None:
+        file_log("set_cookie", self.__class__.__name__)
         """Sets an outgoing cookie name/value with the given options.
 
         Newly-set cookies are not immediately visible via `get_cookie`;
@@ -658,6 +688,7 @@ class RequestHandler(object):
     def clear_cookie(
         self, name: str, path: str = "/", domain: Optional[str] = None
     ) -> None:
+        file_log("clear_cookie", self.__class__.__name__)
         """Deletes the cookie with the given name.
 
         Due to limitations of the cookie protocol, you must pass the same
@@ -684,6 +715,7 @@ class RequestHandler(object):
 
            Added the ``path`` and ``domain`` parameters.
         """
+        file_log("clear_all_cookies", self.__class__.__name__)
         for name in self.request.cookies:
             self.clear_cookie(name, path=path, domain=domain)
 
@@ -695,6 +727,7 @@ class RequestHandler(object):
         version: Optional[int] = None,
         **kwargs: Any
     ) -> None:
+        file_log("set_secure_cookie", self.__class__.__name__)
         """Signs and timestamps a cookie so it cannot be forged.
 
         You must specify the ``cookie_secret`` setting in your Application
@@ -729,6 +762,7 @@ class RequestHandler(object):
     def create_signed_value(
         self, name: str, value: Union[str, bytes], version: Optional[int] = None
     ) -> bytes:
+        file_log("create_signed_value", self.__class__.__name__)
         """Signs and timestamps a string so it cannot be forged.
 
         Normally used via set_secure_cookie, but provided as a separate
@@ -759,6 +793,7 @@ class RequestHandler(object):
         max_age_days: float = 31,
         min_version: Optional[int] = None,
     ) -> Optional[bytes]:
+        file_log("get_secure_cookie", self.__class__.__name__)
         """Returns the given signed cookie if it validates, or None.
 
         The decoded cookie value is returned as a byte string (unlike
@@ -787,6 +822,7 @@ class RequestHandler(object):
     def get_secure_cookie_key_version(
         self, name: str, value: Optional[str] = None
     ) -> Optional[int]:
+        file_log("get_secure_cookie_key_version", self.__class__.__name__)
         """Returns the signing key version of the secure cookie.
 
         The version is returned as int.
@@ -801,6 +837,7 @@ class RequestHandler(object):
     def redirect(
         self, url: str, permanent: bool = False, status: Optional[int] = None
     ) -> None:
+        file_log("redirect", self.__class__.__name__)
         """Sends a redirect to the given (optionally relative) URL.
 
         If the ``status`` argument is specified, that value is used as the
@@ -819,6 +856,7 @@ class RequestHandler(object):
         self.finish()
 
     def write(self, chunk: Union[str, bytes, dict]) -> None:
+        file_log("write", self.__class__.__name__)
         """Writes the given chunk to the output buffer.
 
         To write the output to the network, use the `flush()` method below.
@@ -851,6 +889,7 @@ class RequestHandler(object):
         self._write_buffer.append(chunk)
 
     def render(self, template_name: str, **kwargs: Any) -> "Future[None]":
+        file_log("render", self.__class__.__name__)
         """Renders the template with the given arguments as the response.
 
         ``render()`` calls ``finish()``, so no other output methods can be called
@@ -926,6 +965,7 @@ class RequestHandler(object):
         return self.finish(html)
 
     def render_linked_js(self, js_files: Iterable[str]) -> str:
+        file_log("render_linked_js", self.__class__.__name__)
         """Default method used to render the final js links for the
         rendered webpage.
 
@@ -949,6 +989,7 @@ class RequestHandler(object):
         )
 
     def render_embed_js(self, js_embed: Iterable[bytes]) -> bytes:
+        file_log("render_embed_js", self.__class__.__name__)
         """Default method used to render the final embedded js for the
         rendered webpage.
 
@@ -961,6 +1002,7 @@ class RequestHandler(object):
         )
 
     def render_linked_css(self, css_files: Iterable[str]) -> str:
+        file_log("render_linked_css", self.__class__.__name__)
         """Default method used to render the final css links for the
         rendered webpage.
 
@@ -983,6 +1025,7 @@ class RequestHandler(object):
         )
 
     def render_embed_css(self, css_embed: Iterable[bytes]) -> bytes:
+        file_log("render_embed_css", self.__class__.__name__)
         """Default method used to render the final embedded css for the
         rendered webpage.
 
@@ -991,6 +1034,7 @@ class RequestHandler(object):
         return b'<style type="text/css">\n' + b"\n".join(css_embed) + b"\n</style>"
 
     def render_string(self, template_name: str, **kwargs: Any) -> bytes:
+        file_log("render_string", self.__class__.__name__)
         """Generate the given template with the given arguments.
 
         We return the generated byte string (in utf8). To generate and
@@ -1017,6 +1061,7 @@ class RequestHandler(object):
         return t.generate(**namespace)
 
     def get_template_namespace(self) -> Dict[str, Any]:
+        file_log("get_template_namespace", self.__class__.__name__)
         """Returns a dictionary to be used as the default template namespace.
 
         May be overridden by subclasses to add or modify values.
@@ -1040,6 +1085,7 @@ class RequestHandler(object):
         return namespace
 
     def create_template_loader(self, template_path: str) -> template.BaseLoader:
+        file_log("create_template_loader", self.__class__.__name__)
         """Returns a new template loader for the given path.
 
         May be overridden by subclasses.  By default returns a
@@ -1061,6 +1107,7 @@ class RequestHandler(object):
         return template.Loader(template_path, **kwargs)
 
     def flush(self, include_footers: bool = False) -> "Future[None]":
+        file_log("flush", self.__class__.__name__)
         """Flushes the current output buffer to the network.
 
         .. versionchanged:: 4.0
@@ -1111,6 +1158,7 @@ class RequestHandler(object):
                 return future
 
     def finish(self, chunk: Optional[Union[str, bytes, dict]] = None) -> "Future[None]":
+        file_log("finish", self.__class__.__name__)
         """Finishes this response, ending the HTTP request.
 
         Passing a ``chunk`` to ``finish()`` is equivalent to passing that
@@ -1169,6 +1217,7 @@ class RequestHandler(object):
         return future
 
     def detach(self) -> iostream.IOStream:
+        file_log("detach", self.__class__.__name__)
         """Take control of the underlying stream.
 
         Returns the underlying `.IOStream` object and stops all
@@ -1184,11 +1233,13 @@ class RequestHandler(object):
         return self.request.connection.detach()  # type: ignore
 
     def _break_cycles(self) -> None:
+        file_log("_break_cycles", self.__class__.__name__)
         # Break up a reference cycle between this handler and the
         # _ui_module closures to allow for faster GC on CPython.
         self.ui = None  # type: ignore
 
     def send_error(self, status_code: int = 500, **kwargs: Any) -> None:
+        file_log("send_error", self.__class__.__name__)
         """Sends the given HTTP error code to the browser.
 
         If `flush()` has already been called, it is not possible to send
@@ -1227,6 +1278,7 @@ class RequestHandler(object):
             self.finish()
 
     def write_error(self, status_code: int, **kwargs: Any) -> None:
+        file_log("write_error", self.__class__.__name__)
         """Override to implement custom error pages.
 
         ``write_error`` may call `write`, `render`, `set_header`, etc
@@ -1253,6 +1305,7 @@ class RequestHandler(object):
 
     @property
     def locale(self) -> tornado.locale.Locale:
+        file_log("locale", self.__class__.__name__)
         """The locale for the current session.
 
         Determined by either `get_user_locale`, which you can override to
@@ -1274,9 +1327,11 @@ class RequestHandler(object):
 
     @locale.setter
     def locale(self, value: tornado.locale.Locale) -> None:
+        file_log("locale", self.__class__.__name__)
         self._locale = value
 
     def get_user_locale(self) -> Optional[tornado.locale.Locale]:
+        file_log("get_user_locale", self.__class__.__name__)
         """Override to determine the locale from the authenticated user.
 
         If None is returned, we fall back to `get_browser_locale()`.
@@ -1287,6 +1342,7 @@ class RequestHandler(object):
         return None
 
     def get_browser_locale(self, default: str = "en_US") -> tornado.locale.Locale:
+        file_log("get_browser_locale", self.__class__.__name__)
         """Determines the user's locale from ``Accept-Language`` header.
 
         See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4
@@ -1312,6 +1368,7 @@ class RequestHandler(object):
 
     @property
     def current_user(self) -> Any:
+        file_log("current_user", self.__class__.__name__)
         """The authenticated user for this request.
 
         This is set in one of two ways:
@@ -1348,9 +1405,11 @@ class RequestHandler(object):
 
     @current_user.setter
     def current_user(self, value: Any) -> None:
+        file_log("current_user", self.__class__.__name__)
         self._current_user = value
 
     def get_current_user(self) -> Any:
+        file_log("get_current_user", self.__class__.__name__)
         """Override to determine the current user from, e.g., a cookie.
 
         This method may not be a coroutine.
@@ -1358,6 +1417,7 @@ class RequestHandler(object):
         return None
 
     def get_login_url(self) -> str:
+        file_log("get_login_url", self.__class__.__name__)
         """Override to customize the login URL based on the request.
 
         By default, we use the ``login_url`` application setting.
@@ -1366,6 +1426,7 @@ class RequestHandler(object):
         return self.application.settings["login_url"]
 
     def get_template_path(self) -> Optional[str]:
+        file_log("get_template_path", self.__class__.__name__)
         """Override to customize template path for each handler.
 
         By default, we use the ``template_path`` application setting.
@@ -1375,6 +1436,7 @@ class RequestHandler(object):
 
     @property
     def xsrf_token(self) -> bytes:
+        file_log("xsrf_token", self.__class__.__name__)
         """The XSRF-prevention token for the current user/session.
 
         To prevent cross-site request forgery, we set an '_xsrf' cookie
@@ -1431,6 +1493,7 @@ class RequestHandler(object):
         return self._xsrf_token
 
     def _get_raw_xsrf_token(self) -> Tuple[Optional[int], bytes, float]:
+        file_log("_get_raw_xsrf_token", self.__class__.__name__)
         """Read or generate the xsrf token in its raw form.
 
         The raw_xsrf_token is a tuple containing:
@@ -1459,6 +1522,7 @@ class RequestHandler(object):
     def _decode_xsrf_token(
         self, cookie: str
     ) -> Tuple[Optional[int], Optional[bytes], Optional[float]]:
+        file_log("_decode_xsrf_token", self.__class__.__name__)
         """Convert a cookie string into a the tuple form returned by
         _get_raw_xsrf_token.
         """
@@ -1493,6 +1557,7 @@ class RequestHandler(object):
             return None, None, None
 
     def check_xsrf_cookie(self) -> None:
+        file_log("check_xsrf_cookie", self.__class__.__name__)
         """Verifies that the ``_xsrf`` cookie matches the ``_xsrf`` argument.
 
         To prevent cross-site request forgery, we set an ``_xsrf``
@@ -1531,6 +1596,7 @@ class RequestHandler(object):
             raise HTTPError(403, "XSRF cookie does not match POST argument")
 
     def xsrf_form_html(self) -> str:
+        file_log("xsrf_form_html", self.__class__.__name__)
         """An HTML ``<input/>`` element to be included with all POST forms.
 
         It defines the ``_xsrf`` input value, which we check on all POST
@@ -1552,6 +1618,7 @@ class RequestHandler(object):
     def static_url(
         self, path: str, include_host: Optional[bool] = None, **kwargs: Any
     ) -> str:
+        file_log("static_url", self.__class__.__name__)
         """Returns a static URL for the given relative static file path.
 
         This method requires you set the ``static_path`` setting in your
@@ -1588,6 +1655,7 @@ class RequestHandler(object):
         return base + get_url(self.settings, path, **kwargs)
 
     def require_setting(self, name: str, feature: str = "this feature") -> None:
+        file_log("require_setting", self.__class__.__name__)
         """Raises an exception if the given app setting is not defined."""
         if not self.application.settings.get(name):
             raise Exception(
@@ -1596,10 +1664,12 @@ class RequestHandler(object):
             )
 
     def reverse_url(self, name: str, *args: Any) -> str:
+        file_log("reverse_url", self.__class__.__name__)
         """Alias for `Application.reverse_url`."""
         return self.application.reverse_url(name, *args)
 
     def compute_etag(self) -> Optional[str]:
+        file_log("compute_etag", self.__class__.__name__)
         """Computes the etag header to be used for this request.
 
         By default uses a hash of the content written so far.
@@ -1613,6 +1683,7 @@ class RequestHandler(object):
         return '"%s"' % hasher.hexdigest()
 
     def set_etag_header(self) -> None:
+        file_log("set_etag_header", self.__class__.__name__)
         """Sets the response's Etag header using ``self.compute_etag()``.
 
         Note: no header will be set if ``compute_etag()`` returns ``None``.
@@ -1624,6 +1695,7 @@ class RequestHandler(object):
             self.set_header("Etag", etag)
 
     def check_etag_header(self) -> bool:
+        file_log("check_etag_header", self.__class__.__name__)
         """Checks the ``Etag`` header against requests's ``If-None-Match``.
 
         Returns ``True`` if the request's Etag matches and a 304 should be
@@ -1666,6 +1738,7 @@ class RequestHandler(object):
     async def _execute(
         self, transforms: List["OutputTransform"], *args: bytes, **kwargs: bytes
     ) -> None:
+        file_log("_execute", self.__class__.__name__)
         """Executes this request with the given output transforms."""
         self._transforms = transforms
         try:
@@ -1725,6 +1798,7 @@ class RequestHandler(object):
                 self._prepared_future.set_result(None)
 
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        file_log("data_received", self.__class__.__name__)
         """Implement this method to handle streamed request data.
 
         Requires the `.stream_request_body` decorator.
@@ -1734,6 +1808,7 @@ class RequestHandler(object):
         raise NotImplementedError()
 
     def _log(self) -> None:
+        file_log("_log", self.__class__.__name__)
         """Logs the current request.
 
         Sort of deprecated since this functionality was moved to the
@@ -1743,6 +1818,7 @@ class RequestHandler(object):
         self.application.log_request(self)
 
     def _request_summary(self) -> str:
+        file_log("_request_summary", self.__class__.__name__)
         return "%s %s (%s)" % (
             self.request.method,
             self.request.uri,
@@ -1750,6 +1826,7 @@ class RequestHandler(object):
         )
 
     def _handle_request_exception(self, e: BaseException) -> None:
+        file_log("_handle_request_exception", self.__class__.__name__)
         if isinstance(e, Finish):
             # Not an error; just finish the request without logging.
             if not self._finished:
@@ -1777,6 +1854,7 @@ class RequestHandler(object):
         value: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:
+        file_log("log_exception", self.__class__.__name__)
         """Override to customize logging of uncaught exceptions.
 
         By default logs instances of `HTTPError` as warnings without
@@ -1800,6 +1878,7 @@ class RequestHandler(object):
             )
 
     def _ui_module(self, name: str, module: Type["UIModule"]) -> Callable[..., str]:
+        file_log("_ui_module", self.__class__.__name__)
         def render(*args, **kwargs) -> str:  # type: ignore
             if not hasattr(self, "_active_modules"):
                 self._active_modules = {}  # type: Dict[str, UIModule]
@@ -1811,9 +1890,11 @@ class RequestHandler(object):
         return render
 
     def _ui_method(self, method: Callable[..., str]) -> Callable[..., str]:
+        file_log("_ui_method", self.__class__.__name__)
         return lambda *args, **kwargs: method(self, *args, **kwargs)
 
     def _clear_representation_headers(self) -> None:
+        file_log("_clear_representation_headers", self.__class__.__name__)
         # 304 responses should not contain representation metadata
         # headers (defined in
         # https://tools.ietf.org/html/rfc7231#section-3.1)
@@ -1927,11 +2008,13 @@ class _ApplicationRouter(ReversibleRuleRouter):
     def __init__(
         self, application: "Application", rules: Optional[_RuleList] = None
     ) -> None:
+        file_log("__init__", self.__class__.__name__)
         assert isinstance(application, Application)
         self.application = application
         super().__init__(rules)
 
     def process_rule(self, rule: Rule) -> Rule:
+        file_log("process_rule", self.__class__.__name__)
         rule = super().process_rule(rule)
 
         if isinstance(rule.target, (list, tuple)):
@@ -1944,6 +2027,7 @@ class _ApplicationRouter(ReversibleRuleRouter):
     def get_target_delegate(
         self, target: Any, request: httputil.HTTPServerRequest, **target_params: Any
     ) -> Optional[httputil.HTTPMessageDelegate]:
+        file_log("get_target_delegate", self.__class__.__name__)
         if isclass(target) and issubclass(target, RequestHandler):
             return self.application.get_handler_delegate(
                 request, target, **target_params
@@ -2043,6 +2127,7 @@ class Application(ReversibleRouter):
         transforms: Optional[List[Type["OutputTransform"]]] = None,
         **settings: Any
     ) -> None:
+        file_log("__init__", self.__class__.__name__)
         if transforms is None:
             self.transforms = []  # type: List[Type[OutputTransform]]
             if settings.get("compress_response") or settings.get("gzip"):
@@ -2093,6 +2178,7 @@ class Application(ReversibleRouter):
             autoreload.start()
 
     def listen(self, port: int, address: str = "", **kwargs: Any) -> HTTPServer:
+        file_log("listen", self.__class__.__name__)
         """Starts an HTTP server for this application on the given port.
 
         This is a convenience alias for creating an `.HTTPServer`
@@ -2116,6 +2202,7 @@ class Application(ReversibleRouter):
         return server
 
     def add_handlers(self, host_pattern: str, host_handlers: _RuleList) -> None:
+        file_log("add_handlers", self.__class__.__name__)
         """Appends the given handlers to our handler list.
 
         Host patterns are processed sequentially in the order they were
@@ -2132,9 +2219,11 @@ class Application(ReversibleRouter):
             )
 
     def add_transform(self, transform_class: Type["OutputTransform"]) -> None:
+        file_log("add_transform", self.__class__.__name__)
         self.transforms.append(transform_class)
 
     def _load_ui_methods(self, methods: Any) -> None:
+        file_log("_load_ui_methods", self.__class__.__name__)
         if isinstance(methods, types.ModuleType):
             self._load_ui_methods(dict((n, getattr(methods, n)) for n in dir(methods)))
         elif isinstance(methods, list):
@@ -2150,6 +2239,7 @@ class Application(ReversibleRouter):
                     self.ui_methods[name] = fn
 
     def _load_ui_modules(self, modules: Any) -> None:
+        file_log("_load_ui_modules", self.__class__.__name__)
         if isinstance(modules, types.ModuleType):
             self._load_ui_modules(dict((n, getattr(modules, n)) for n in dir(modules)))
         elif isinstance(modules, list):
@@ -2167,6 +2257,7 @@ class Application(ReversibleRouter):
     def __call__(
         self, request: httputil.HTTPServerRequest
     ) -> Optional[Awaitable[None]]:
+        file_log("__call__", self.__class__.__name__)
         # Legacy HTTPServer interface
         dispatcher = self.find_handler(request)
         return dispatcher.execute()
@@ -2174,6 +2265,7 @@ class Application(ReversibleRouter):
     def find_handler(
         self, request: httputil.HTTPServerRequest, **kwargs: Any
     ) -> "_HandlerDelegate":
+        file_log("find_handler", self.__class__.__name__)
         route = self.default_router.find_handler(request)
         if route is not None:
             return cast("_HandlerDelegate", route)
@@ -2195,6 +2287,7 @@ class Application(ReversibleRouter):
         path_args: Optional[List[bytes]] = None,
         path_kwargs: Optional[Dict[str, bytes]] = None,
     ) -> "_HandlerDelegate":
+        file_log("get_handler_delegate", self.__class__.__name__)
         """Returns `~.httputil.HTTPMessageDelegate` that can serve a request
         for application and `RequestHandler` subclass.
 
@@ -2210,6 +2303,7 @@ class Application(ReversibleRouter):
         )
 
     def reverse_url(self, name: str, *args: Any) -> str:
+        file_log("reverse_url", self.__class__.__name__)
         """Returns a URL path for handler named ``name``
 
         The handler must be added to the application as a named `URLSpec`.
@@ -2225,6 +2319,7 @@ class Application(ReversibleRouter):
         raise KeyError("%s not found in named urls" % name)
 
     def log_request(self, handler: RequestHandler) -> None:
+        file_log("log_request", self.__class__.__name__)
         """Writes a completed HTTP request to the logs.
 
         By default writes to the python root logger.  To change
@@ -2260,6 +2355,7 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
         path_args: Optional[List[bytes]],
         path_kwargs: Optional[Dict[str, bytes]],
     ) -> None:
+        file_log("__init__", self.__class__.__name__)
         self.application = application
         self.connection = request.connection
         self.request = request
@@ -2275,12 +2371,14 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
         start_line: Union[httputil.RequestStartLine, httputil.ResponseStartLine],
         headers: httputil.HTTPHeaders,
     ) -> Optional[Awaitable[None]]:
+        file_log("headers_received", self.__class__.__name__)
         if self.stream_request_body:
             self.request._body_future = Future()
             return self.execute()
         return None
 
     def data_received(self, data: bytes) -> Optional[Awaitable[None]]:
+        file_log("data_received", self.__class__.__name__)
         if self.stream_request_body:
             return self.handler.data_received(data)
         else:
@@ -2288,6 +2386,7 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
             return None
 
     def finish(self) -> None:
+        file_log("finish", self.__class__.__name__)
         if self.stream_request_body:
             future_set_result_unless_cancelled(self.request._body_future, None)
         else:
@@ -2296,12 +2395,14 @@ class _HandlerDelegate(httputil.HTTPMessageDelegate):
             self.execute()
 
     def on_connection_close(self) -> None:
+        file_log("on_connection_close", self.__class__.__name__)
         if self.stream_request_body:
             self.handler.on_connection_close()
         else:
             self.chunks = None  # type: ignore
 
     def execute(self) -> Optional[Awaitable[None]]:
+        file_log("execute", self.__class__.__name__)
         # If template cache is disabled (usually in the debug mode),
         # re-compile templates and reload static files on every
         # request so you don't need to restart to see changes
@@ -2366,6 +2467,7 @@ class HTTPError(Exception):
         *args: Any,
         **kwargs: Any
     ) -> None:
+        file_log("__init__", self.__class__.__name__)
         self.status_code = status_code
         self.log_message = log_message
         self.args = args
@@ -2374,6 +2476,7 @@ class HTTPError(Exception):
             self.log_message = log_message.replace("%", "%%")
 
     def __str__(self) -> str:
+        file_log("__str__", self.__class__.__name__)
         message = "HTTP %d: %s" % (
             self.status_code,
             self.reason or httputil.responses.get(self.status_code, "Unknown"),
@@ -2422,6 +2525,7 @@ class MissingArgumentError(HTTPError):
     """
 
     def __init__(self, arg_name: str) -> None:
+        file_log("__init__", self.__class__.__name__)
         super().__init__(400, "Missing argument %s" % arg_name)
         self.arg_name = arg_name
 
@@ -2430,12 +2534,15 @@ class ErrorHandler(RequestHandler):
     """Generates an error response with ``status_code`` for all requests."""
 
     def initialize(self, status_code: int) -> None:
+        file_log("initialize", self.__class__.__name__)
         self.set_status(status_code)
 
     def prepare(self) -> None:
+        file_log("prepare", self.__class__.__name__)
         raise HTTPError(self._status_code)
 
     def check_xsrf_cookie(self) -> None:
+        file_log("check_xsrf_cookie", self.__class__.__name__)
         # POSTs to an ErrorHandler don't actually have side effects,
         # so we don't need to check the xsrf token.  This allows POSTs
         # to the wrong url to return a 404 instead of 403.
@@ -2476,10 +2583,12 @@ class RedirectHandler(RequestHandler):
     """
 
     def initialize(self, url: str, permanent: bool = True) -> None:
+        file_log("initialize", self.__class__.__name__)
         self._url = url
         self._permanent = permanent
 
     def get(self, *args: Any, **kwargs: Any) -> None:
+        file_log("get", self.__class__.__name__)
         to_url = self._url.format(*args, **kwargs)
         if self.request.query_arguments:
             # TODO: figure out typing for the next line.
@@ -2563,18 +2672,22 @@ class StaticFileHandler(RequestHandler):
     _lock = threading.Lock()  # protects _static_hashes
 
     def initialize(self, path: str, default_filename: Optional[str] = None) -> None:
+        file_log("initialize", self.__class__.__name__)
         self.root = path
         self.default_filename = default_filename
 
     @classmethod
     def reset(cls) -> None:
+        file_log("reset", self.__class__.__name__)
         with cls._lock:
             cls._static_hashes = {}
 
     def head(self, path: str) -> Awaitable[None]:
+        file_log("head", self.__class__.__name__)
         return self.get(path, include_body=False)
 
     async def get(self, path: str, include_body: bool = True) -> None:
+        file_log("get", self.__class__.__name__)
         # Set up our path instance variables.
         self.path = self.parse_url_path(path)
         del path  # make sure we don't refer to path instead of self.path again
@@ -2658,6 +2771,7 @@ class StaticFileHandler(RequestHandler):
             assert self.request.method == "HEAD"
 
     def compute_etag(self) -> Optional[str]:
+        file_log("compute_etag", self.__class__.__name__)
         """Sets the ``Etag`` header based on static url version.
 
         This allows efficient ``If-None-Match`` checks against cached
@@ -2673,6 +2787,7 @@ class StaticFileHandler(RequestHandler):
         return '"%s"' % (version_hash,)
 
     def set_headers(self) -> None:
+        file_log("set_headers", self.__class__.__name__)
         """Sets the content and caching headers on the response.
 
         .. versionadded:: 3.1
@@ -2698,6 +2813,7 @@ class StaticFileHandler(RequestHandler):
         self.set_extra_headers(self.path)
 
     def should_return_304(self) -> bool:
+        file_log("should_return_304", self.__class__.__name__)
         """Returns True if the headers indicate that we should return 304.
 
         .. versionadded:: 3.1
@@ -2721,6 +2837,7 @@ class StaticFileHandler(RequestHandler):
 
     @classmethod
     def get_absolute_path(cls, root: str, path: str) -> str:
+        file_log("get_absolute_path", self.__class__.__name__)
         """Returns the absolute location of ``path`` relative to ``root``.
 
         ``root`` is the path configured for this `StaticFileHandler`
@@ -2737,6 +2854,7 @@ class StaticFileHandler(RequestHandler):
         return abspath
 
     def validate_absolute_path(self, root: str, absolute_path: str) -> Optional[str]:
+        file_log("validate_absolute_path", self.__class__.__name__)
         """Validate and return the absolute path.
 
         ``root`` is the configured path for the `StaticFileHandler`,
@@ -2790,6 +2908,7 @@ class StaticFileHandler(RequestHandler):
     def get_content(
         cls, abspath: str, start: Optional[int] = None, end: Optional[int] = None
     ) -> Generator[bytes, None, None]:
+        file_log("get_content", cls.__name__)
         """Retrieve the content of the requested resource which is located
         at the given absolute path.
 
@@ -2827,6 +2946,7 @@ class StaticFileHandler(RequestHandler):
 
     @classmethod
     def get_content_version(cls, abspath: str) -> str:
+        file_log("get_content_version", cls.__name__)
         """Returns a version string for the resource at the given path.
 
         This class method may be overridden by subclasses.  The
@@ -2844,12 +2964,14 @@ class StaticFileHandler(RequestHandler):
         return hasher.hexdigest()
 
     def _stat(self) -> os.stat_result:
+        file_log("_stat", self.__class__.__name__)
         assert self.absolute_path is not None
         if not hasattr(self, "_stat_result"):
             self._stat_result = os.stat(self.absolute_path)
         return self._stat_result
 
     def get_content_size(self) -> int:
+        file_log("get_content_size", self.__class__.__name__)
         """Retrieve the total size of the resource at the given path.
 
         This method may be overridden by subclasses.
@@ -2864,6 +2986,7 @@ class StaticFileHandler(RequestHandler):
         return stat_result.st_size
 
     def get_modified_time(self) -> Optional[datetime.datetime]:
+        file_log("get_modified_time", self.__class__.__name__)
         """Returns the time that ``self.absolute_path`` was last modified.
 
         May be overridden in subclasses.  Should return a `~datetime.datetime`
@@ -2884,6 +3007,7 @@ class StaticFileHandler(RequestHandler):
         return modified
 
     def get_content_type(self) -> str:
+        file_log("get_content_type", self.__class__.__name__)
         """Returns the ``Content-Type`` header to be used for this request.
 
         .. versionadded:: 3.1
@@ -2905,12 +3029,14 @@ class StaticFileHandler(RequestHandler):
             return "application/octet-stream"
 
     def set_extra_headers(self, path: str) -> None:
+        file_log("set_extra_headers", self.__class__.__name__)
         """For subclass to add extra headers to the response"""
         pass
 
     def get_cache_time(
         self, path: str, modified: Optional[datetime.datetime], mime_type: str
     ) -> int:
+        file_log("get_cache_time", self.__class__.__name__)
         """Override to customize cache control behavior.
 
         Return a positive number of seconds to make the result
@@ -2927,6 +3053,7 @@ class StaticFileHandler(RequestHandler):
     def make_static_url(
         cls, settings: Dict[str, Any], path: str, include_version: bool = True
     ) -> str:
+        file_log("make_static_url", cls.__name__)
         """Constructs a versioned url for the given path.
 
         This method may be overridden in subclasses (but note that it
@@ -2956,6 +3083,7 @@ class StaticFileHandler(RequestHandler):
         return "%s?v=%s" % (url, version_hash)
 
     def parse_url_path(self, url_path: str) -> str:
+        file_log("parse_url_path", self.__class__.__name__)
         """Converts a static URL path into a filesystem path.
 
         ``url_path`` is the path component of the URL with
@@ -2970,6 +3098,7 @@ class StaticFileHandler(RequestHandler):
 
     @classmethod
     def get_version(cls, settings: Dict[str, Any], path: str) -> Optional[str]:
+        file_log("get_version", cls.__name__)
         """Generate the version string to be used in static URLs.
 
         ``settings`` is the `Application.settings` dictionary and ``path``
@@ -2987,6 +3116,7 @@ class StaticFileHandler(RequestHandler):
 
     @classmethod
     def _get_cached_version(cls, abs_path: str) -> Optional[str]:
+        file_log("_get_cached_version", cls.__name__)
         with cls._lock:
             hashes = cls._static_hashes
             if abs_path not in hashes:
@@ -3021,9 +3151,11 @@ class FallbackHandler(RequestHandler):
     def initialize(
         self, fallback: Callable[[httputil.HTTPServerRequest], None]
     ) -> None:
+        file_log("initialize", self.__class__.__name__)
         self.fallback = fallback
 
     def prepare(self) -> None:
+        file_log("prepare", self.__class__.__name__)
         self.fallback(self.request)
         self._finished = True
         self.on_finish()
@@ -3038,6 +3170,7 @@ class OutputTransform(object):
     """
 
     def __init__(self, request: httputil.HTTPServerRequest) -> None:
+        file_log("__init__", self.__class__.__name__)
         pass
 
     def transform_first_chunk(
@@ -3047,9 +3180,11 @@ class OutputTransform(object):
         chunk: bytes,
         finishing: bool,
     ) -> Tuple[int, httputil.HTTPHeaders, bytes]:
+        file_log("transform_first_chunk", self.__class__.__name__)
         return status_code, headers, chunk
 
     def transform_chunk(self, chunk: bytes, finishing: bool) -> bytes:
+        file_log("transform_chunk", self.__class__.__name__)
         return chunk
 
 
@@ -3089,9 +3224,11 @@ class GZipContentEncoding(OutputTransform):
     MIN_LENGTH = 1024
 
     def __init__(self, request: httputil.HTTPServerRequest) -> None:
+        file_log("__init__", self.__class__.__name__)
         self._gzipping = "gzip" in request.headers.get("Accept-Encoding", "")
 
     def _compressible_type(self, ctype: str) -> bool:
+        file_log("_compressible_type", self.__class__.__name__)
         return ctype.startswith("text/") or ctype in self.CONTENT_TYPES
 
     def transform_first_chunk(
@@ -3101,6 +3238,7 @@ class GZipContentEncoding(OutputTransform):
         chunk: bytes,
         finishing: bool,
     ) -> Tuple[int, httputil.HTTPHeaders, bytes]:
+        file_log("transform_first_chunk", self.__class__.__name__)
         # TODO: can/should this type be inherited from the superclass?
         if "Vary" in headers:
             headers["Vary"] += ", Accept-Encoding"
@@ -3132,6 +3270,7 @@ class GZipContentEncoding(OutputTransform):
         return status_code, headers, chunk
 
     def transform_chunk(self, chunk: bytes, finishing: bool) -> bytes:
+        file_log("transform_chunk", self.__class__.__name__)
         if self._gzipping:
             self._gzip_file.write(chunk)
             if finishing:
@@ -3192,6 +3331,7 @@ class UIModule(object):
     """
 
     def __init__(self, handler: RequestHandler) -> None:
+        file_log("__init__", self.__class__.__name__)
         self.handler = handler
         self.request = handler.request
         self.ui = handler.ui
@@ -3199,18 +3339,22 @@ class UIModule(object):
 
     @property
     def current_user(self) -> Any:
+        file_log("current_user", self.__class__.__name__)
         return self.handler.current_user
 
     def render(self, *args: Any, **kwargs: Any) -> str:
+        file_log("render", self.__class__.__name__)
         """Override in subclasses to return this module's output."""
         raise NotImplementedError()
 
     def embedded_javascript(self) -> Optional[str]:
+        file_log("embedded_javascript", self.__class__.__name__)
         """Override to return a JavaScript string
         to be embedded in the page."""
         return None
 
     def javascript_files(self) -> Optional[Iterable[str]]:
+        file_log("javascript_files", self.__class__.__name__)
         """Override to return a list of JavaScript files needed by this module.
 
         If the return values are relative paths, they will be passed to
@@ -3219,11 +3363,13 @@ class UIModule(object):
         return None
 
     def embedded_css(self) -> Optional[str]:
+        file_log("embedded_css", self.__class__.__name__)
         """Override to return a CSS string
         that will be embedded in the page."""
         return None
 
     def css_files(self) -> Optional[Iterable[str]]:
+        file_log("css_files", self.__class__.__name__)
         """Override to returns a list of CSS files required by this module.
 
         If the return values are relative paths, they will be passed to
@@ -3232,29 +3378,34 @@ class UIModule(object):
         return None
 
     def html_head(self) -> Optional[str]:
+        file_log("html_head", self.__class__.__name__)
         """Override to return an HTML string that will be put in the <head/>
         element.
         """
         return None
 
     def html_body(self) -> Optional[str]:
+        file_log("html_body", self.__class__.__name__)
         """Override to return an HTML string that will be put at the end of
         the <body/> element.
         """
         return None
 
     def render_string(self, path: str, **kwargs: Any) -> bytes:
+        file_log("render_string", self.__class__.__name__)
         """Renders a template and returns it as a string."""
         return self.handler.render_string(path, **kwargs)
 
 
 class _linkify(UIModule):
     def render(self, text: str, **kwargs: Any) -> str:  # type: ignore
+        file_log("render", self.__class__.__name__)
         return escape.linkify(text, **kwargs)
 
 
 class _xsrf_form_html(UIModule):
     def render(self) -> str:  # type: ignore
+        file_log("render", self.__class__.__name__)
         return self.handler.xsrf_form_html()
 
 
@@ -3275,12 +3426,14 @@ class TemplateModule(UIModule):
     """
 
     def __init__(self, handler: RequestHandler) -> None:
+        file_log("__init__", self.__class__.__name__)
         super().__init__(handler)
         # keep resources in both a list and a dict to preserve order
         self._resource_list = []  # type: List[Dict[str, Any]]
         self._resource_dict = {}  # type: Dict[str, Dict[str, Any]]
 
     def render(self, path: str, **kwargs: Any) -> bytes:  # type: ignore
+        file_log("render", self.__class__.__name__)
         def set_resources(**kwargs) -> str:  # type: ignore
             if path not in self._resource_dict:
                 self._resource_list.append(kwargs)
@@ -3296,12 +3449,15 @@ class TemplateModule(UIModule):
         return self.render_string(path, set_resources=set_resources, **kwargs)
 
     def _get_resources(self, key: str) -> Iterable[str]:
+        file_log("_get_resources", self.__class__.__name__)
         return (r[key] for r in self._resource_list if key in r)
 
     def embedded_javascript(self) -> str:
+        file_log("embedded_javascript", self.__class__.__name__)
         return "\n".join(self._get_resources("embedded_javascript"))
 
     def javascript_files(self) -> Iterable[str]:
+        file_log("javascript_files", self.__class__.__name__)
         result = []
         for f in self._get_resources("javascript_files"):
             if isinstance(f, (unicode_type, bytes)):
@@ -3311,9 +3467,11 @@ class TemplateModule(UIModule):
         return result
 
     def embedded_css(self) -> str:
+        file_log("embedded_css", self.__class__.__name__)
         return "\n".join(self._get_resources("embedded_css"))
 
     def css_files(self) -> Iterable[str]:
+        file_log("css_files", self.__class__.__name__)
         result = []
         for f in self._get_resources("css_files"):
             if isinstance(f, (unicode_type, bytes)):
@@ -3323,9 +3481,11 @@ class TemplateModule(UIModule):
         return result
 
     def html_head(self) -> str:
+        file_log("html_head", self.__class__.__name__)
         return "".join(self._get_resources("html_head"))
 
     def html_body(self) -> str:
+        file_log("html_body", self.__class__.__name__)
         return "".join(self._get_resources("html_body"))
 
 
@@ -3335,13 +3495,16 @@ class _UIModuleNamespace(object):
     def __init__(
         self, handler: RequestHandler, ui_modules: Dict[str, Type[UIModule]]
     ) -> None:
+        file_log("__init__", self.__class__.__name__)
         self.handler = handler
         self.ui_modules = ui_modules
 
     def __getitem__(self, key: str) -> Callable[..., str]:
+        file_log("__getitem__", self.__class__.__name__)
         return self.handler._ui_module(key, self.ui_modules[key])
 
     def __getattr__(self, key: str) -> Callable[..., str]:
+        file_log("__getattr__", self.__class__.__name__)
         try:
             return self[key]
         except KeyError as e:
